@@ -1,0 +1,14 @@
+{
+  "name": "jearls-certtools",
+  "version": "0.1.0",
+  "author": "Johnson Earls",
+  "summary": "Manage NSS certificate stores.",
+  "license": "Apache-2.0",
+  "source": "https://github.com/jearls/puppet-certtools",
+  "project_page": "https://github.com/jearls/puppet-certtools",
+  "issues_url": "https://github.com/jearls/puppet-certtools/issues",
+  "dependencies": [
+    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
+  ]
+}
+
