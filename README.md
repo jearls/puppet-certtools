@@ -15,46 +15,53 @@
 
 ## Overview
 
-A one-maybe-two sentence summary of what the module does/what problem it solves.
-This is your 30 second elevator pitch for your module. Consider including
-OS/Puppet version it works with.
+A set of tools for working with certificates and certificate stores.
 
 ## Module Description
 
-If applicable, this section should have a brief description of the technology
-the module integrates with and what that integration enables. This section
-should answer the questions: "What does this module *do*?" and "Why would I use
-it?"
-
-If your module has a range of functionality (installation, configuration,
-management, etc.) this is the time to mention it.
+This puppet module provides a set of defined resource types that allow you to manage NSS certificate stores and the keys and certificates held in those stores.
+Only tested on Puppet 4 and RedHat 6.
 
 ## Setup
 
 ### What certtools affects
 
-* A list of files, packages, services, or operations that the module will alter,
-  impact, or execute on the system it's installed on.
-* This is a great place to stick any warnings.
-* Can be in list or paragraph form.
+The base class installs the required packages - on RedHat, this consists of `nss-tools` and `openssl`.
 
-### Setup Requirements **OPTIONAL**
+The `certtools::store` and `certtools::store::cert` types manage a certificate store and the certificates and keys within that store, respectively.  For the directory which contains the store, they (via the `certutil` and `pk12util` commands) create and manage the `cert8.db`, `key3.db`, and `secmod.db` files.
 
-If your module requires anything extra before setting up (pluginsync enabled,
-etc.), mention it here.
-
-### Beginning with certtools
-
-The very basic steps needed for a user to get the module up and running.
-
-If your most recent release breaks compatibility or requires particular steps
-for upgrading, you may wish to include an additional section here: Upgrading
-(For an example, see http://forge.puppetlabs.com/puppetlabs/firewall).
+**Warning** - when storing or retrieving keys, the key's password will appear in the command line of the import or export command.
 
 ## Usage
 
-Put the classes, types, and resources for customizing, configuring, and doing
-the fancy stuff with your module here.
+The simplest example:
+
+    # make sure the required packages are installed
+    include certtools
+
+    # make sure my certificate store is created
+    certtools::store { '/etc/openldap/certs':
+      ensure => present ,
+    }
+
+    # install my CA's intermediate certificates
+    certtools::store::cert { 'LDAP intermediate certificate':
+      ensure      => present ,
+      store       => '/etc/openldap/certs' ,
+      certificate => "puppet:///modules/${module_name}/intermediate.crt" ,
+      trust       => 'CT' ,
+      nickname    => 'intermediate' ,
+    }
+
+    certtools::store::cert { 'LDAP server certificate':
+      ensure      => present ,
+      store       => '/etc/openldap/certs' ,
+      certificate => "puppet:///modules/${module_name}/ldap.crt" ,
+      key         => '/tmp/ldap.key' , # assumed to be generated elsewhere
+      keypass     => 'This1s@$ecre+' , # Dunno how to do this more securely
+      keytype     => pem , # defaults to 'pem', can also be 'pkcs12'
+      nickname    => 'ldap' ,
+    }
 
 ## Reference
 
@@ -65,15 +72,13 @@ with things. (We are working on automating this section!)
 
 ## Limitations
 
-This is where you list OS compatibility, version compatibility, etc.
+Only tested on Puppet version 4 running on Enterprise Linux (RHEL/OEL/etc.) 6.
 
 ## Development
 
-Since your module is awesome, other users will want to play with it. Let them
-know what the ground rules for contributing are.
-
-## Release Notes/Contributors/Etc **Optional**
-
-If you aren't using changelog, put your release notes here (though you should
-consider using changelog). You may also add any additional sections you feel are
-necessary or important to include here. Please use the `## ` header.
+* Clone the [GitHub repository](https://github.com/jearls/puppet-certtools)
+* Create a topic branch for your fix or new feature
+* Make your changes
+* Add new `spec` tests for your changes
+* Ensure the `bundle exec rake spec` tests pass
+* Push back to github and open a pull request
